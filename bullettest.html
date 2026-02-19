@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ballistic Correlator (Quadratic Drag)</title>
+  <style>
+    :root { --bg:#c0c0c0; --panel:#d4d4d4; --ink:#111; --shadow:#7a7a7a; --hilite:#f3f3f3; }
+    body{
+      margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:#1b1b1b; color:var(--ink);
+      display:flex; align-items:center; justify-content:center; min-height:100vh; padding:16px;
+    }
+    .win{
+      width:min(980px, 100%);
+      background:var(--bg);
+      border:2px solid #000;
+      box-shadow: 0 0 0 2px #4a4a4a, 10px 10px 0 #000;
+    }
+    .titlebar{
+      background:#000080; color:#fff; padding:8px 10px; font-weight:700;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .titlebar .btns{ display:flex; gap:6px; }
+    .titlebar .btn{
+      width:14px; height:14px; background:var(--panel);
+      border-top:2px solid var(--hilite);
+      border-left:2px solid var(--hilite);
+      border-right:2px solid var(--shadow);
+      border-bottom:2px solid var(--shadow);
+    }
+    .content{ padding:14px; display:grid; gap:12px; grid-template-columns: 1.1fr 0.9fr; }
+    @media (max-width: 860px){ .content{ grid-template-columns:1fr; } }
+    .group{
+      background:var(--panel);
+      border-top:2px solid var(--hilite);
+      border-left:2px solid var(--hilite);
+      border-right:2px solid var(--shadow);
+      border-bottom:2px solid var(--shadow);
+      padding:12px;
+    }
+    .group h3{ margin:0 0 10px 0; font-size:14px; }
+    .row{ display:grid; grid-template-columns: 170px 1fr; gap:10px; align-items:center; margin:8px 0; }
+    label{ font-size:13px; }
+    input, select{
+      width:100%; padding:8px 8px; font-size:13px; outline:none;
+      background:#fff; color:#000;
+      border:2px solid #000;
+      box-shadow: inset 2px 2px 0 #666, inset -2px -2px 0 #eee;
+    }
+    .hint{ font-size:12px; color:#222; opacity:0.85; margin-top:8px; line-height:1.35; }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    button{
+      padding:9px 12px; font-size:13px; cursor:pointer;
+      background:var(--panel);
+      border-top:2px solid var(--hilite);
+      border-left:2px solid var(--hilite);
+      border-right:2px solid var(--shadow);
+      border-bottom:2px solid var(--shadow);
+    }
+    button:active{
+      border-top:2px solid var(--shadow);
+      border-left:2px solid var(--shadow);
+      border-right:2px solid var(--hilite);
+      border-bottom:2px solid var(--hilite);
+    }
+    .out{
+      font-size:13px;
+      background:#fff;
+      border:2px solid #000;
+      box-shadow: inset 2px 2px 0 #666, inset -2px -2px 0 #eee;
+      padding:10px;
+      white-space:pre-wrap;
+      min-height:260px;
+    }
+    .foot{ padding:0 14px 14px; font-size:12px; color:#ddd; }
+    .note{
+      background:#101010; border:1px solid #333; padding:10px; border-radius:8px;
+      color:#ddd; line-height:1.35;
+    }
+    .kpi{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width: 500px){ .kpi{ grid-template-columns:1fr; } }
+    .tiny{ font-size:12px; opacity:0.9; }
+  </style>
+</head>
+<body>
+  <div class="win" role="application" aria-label="Ballistic Correlator">
+    <div class="titlebar">
+      <div>Ballistic Correlator — Quadratic Drag (Rifle/Pistol Presets)</div>
+      <div class="btns" aria-hidden="true">
+        <div class="btn"></div><div class="btn"></div><div class="btn"></div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="group">
+        <h3>Inputs</h3>
+
+        <div class="row">
+          <label for="preset">Caliber preset</label>
+          <select id="preset"></select>
+        </div>
+
+        <div class="kpi">
+          <div class="row">
+            <label for="rho">Fluid density ρ (kg/m³)</label>
+            <input id="rho" type="number" step="any" value="1.225" />
+          </div>
+          <div class="row">
+            <label for="cd">Drag coefficient Cd</label>
+            <input id="cd" type="number" step="any" value="0.30" />
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="row">
+            <label for="range">Range x (m)</label>
+            <input id="range" type="number" step="any" value="100" />
+          </div>
+          <div class="row">
+            <label for="fmt">Number format</label>
+            <select id="fmt">
+              <option value="sn" selected>Scientific notation</option>
+              <option value="plain">Plain numbers</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="override">Override preset values?</label>
+          <select id="override">
+            <option value="no" selected>No (use preset)</option>
+            <option value="yes">Yes (edit m, d, v₀)</option>
+          </select>
+        </div>
+
+        <div id="overrideBox" style="display:none;">
+          <div class="kpi">
+            <div class="row">
+              <label for="m">Mass m (kg)</label>
+              <input id="m" type="number" step="any" />
+            </div>
+            <div class="row">
+              <label for="d">Diameter d (m)</label>
+              <input id="d" type="number" step="any" />
+            </div>
+          </div>
+          <div class="row">
+            <label for="v0">Muzzle speed v₀ (m/s)</label>
+            <input id="v0" type="number" step="any" />
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="compute">Compute</button>
+          <button id="reset">Reset to Earth defaults</button>
+        </div>
+
+        <div class="hint">
+          Model:
+          <div class="tiny">
+            F<sub>d</sub> = ½ ρ C<sub>d</sub> A v²<br/>
+            K = ½ ρ C<sub>d</sub> (A/m)<br/>
+            v(x) = v₀ e<sup>-Kx</sup> &nbsp; (simple analytic model)<br/>
+            KE(x) = ½ m v(x)²
+          </div>
+          Notes: This is a simplified exterior-ballistics toy model (constant Cd, no yaw, no Mach table, no gravity drop). Great for planet comparisons.
+        </div>
+      </div>
+
+      <div class="group">
+        <h3>Outputs</h3>
+        <div id="out" class="out"></div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="note">
+        <b>How to use on your Canva site:</b><br/>
+        1) Save this file as <span class="tiny">ballistic_correlator.html</span><br/>
+        2) Host it (easy: Netlify drag-and-drop, or GitHub Pages).<br/>
+        3) In Canva, add an <b>Embed</b> element and paste the hosted URL (or just link to it).
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Presets (you can tweak anytime)
+  // d in meters, m in kg, v0 in m/s
+  const PRESETS = [
+    { key:"556",  name:"5.56 NATO (control)",     d:5.56e-3, m:4.0e-3,  v0:900 },
+    { key:"762",  name:"7.62 NATO (9 g @ 700)",   d:7.62e-3, m:9.0e-3,  v0:700 },
+    { key:"762H", name:"7.62 RND Heavy (21 g @ 750)", d:7.62e-3, m:2.1e-2, v0:750 },
+    { key:"308",  name:".308 (control, 7.82mm @ 10 g @ 820)", d:7.82e-3, m:1.0e-2, v0:820 },
+    { key:"9mm",  name:"9mm (pistol-ish, 8 g @ 350)", d:9.0e-3,  m:8.0e-3, v0:350 },
+  ];
+
+  const elPreset = document.getElementById("preset");
+  const elRho = document.getElementById("rho");
+  const elCd = document.getElementById("cd");
+  const elRange = document.getElementById("range");
+  const elFmt = document.getElementById("fmt");
+  const elOverride = document.getElementById("override");
+  const elOverrideBox = document.getElementById("overrideBox");
+  const elM = document.getElementById("m");
+  const elD = document.getElementById("d");
+  const elV0 = document.getElementById("v0");
+  const elOut = document.getElementById("out");
+
+  function fmt(x, mode){
+    if (!Number.isFinite(x)) return "—";
+    if (mode === "plain"){
+      // keep readable; avoid crazy decimals
+      const ax = Math.abs(x);
+      if (ax === 0) return "0";
+      if (ax >= 1000 || ax < 0.001) return x.toPrecision(6);
+      return x.toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+    }
+    // scientific-ish
+    return x.toExponential(6).replace("e+", "e");
+  }
+
+  function areaFromDiameter(d){
+    return Math.PI * Math.pow(d/2, 2);
+  }
+
+  function getSelectedPreset(){
+    const key = elPreset.value;
+    return PRESETS.find(p => p.key === key) || PRESETS[0];
+  }
+
+  function syncOverrideFieldsFromPreset(){
+    const p = getSelectedPreset();
+    elM.value = p.m;
+    elD.value = p.d;
+    elV0.value = p.v0;
+  }
+
+  function populatePresets(){
+    for (const p of PRESETS){
+      const opt = document.createElement("option");
+      opt.value = p.key;
+      opt.textContent = p.name;
+      elPreset.appendChild(opt);
+    }
+    elPreset.value = PRESETS[0].key;
+    syncOverrideFieldsFromPreset();
+  }
+
+  function compute(){
+    const mode = elFmt.value;
+
+    const rho = Number(elRho.value);
+    const cd  = Number(elCd.value);
+    const x   = Number(elRange.value);
+
+    if (!(rho >= 0) || !(cd > 0) || !(x >= 0)){
+      elOut.textContent = "Invalid input(s). Ensure: ρ ≥ 0, Cd > 0, range ≥ 0.";
+      return;
+    }
+
+    const p = getSelectedPreset();
+    let m = p.m, d = p.d, v0 = p.v0;
+
+    if (elOverride.value === "yes"){
+      m = Number(elM.value);
+      d = Number(elD.value);
+      v0 = Number(elV0.value);
+      if (!(m > 0) || !(d > 0) || !(v0 >= 0)){
+        elOut.textContent = "Invalid override values. Need: m > 0, d > 0, v₀ ≥ 0.";
+        return;
+      }
+    }
+
+    const A = areaFromDiameter(d);
+
+    // Drag force at muzzle (snapshot):
+    // Fd0 = 1/2 * rho * Cd * A * v0^2
+    const Fd0 = 0.5 * rho * cd * A * v0 * v0;
+
+    // K = 1/2 * rho * Cd * (A/m)  [1/m]
+    const K = 0.5 * rho * cd * (A / m);
+
+    // Simple analytic velocity vs distance:
+    // v(x) = v0 * exp(-Kx)
+    const vx = v0 * Math.exp(-K * x);
+
+    // Energies:
+    const KE0 = 0.5 * m * v0 * v0;
+    const KEx = 0.5 * m * vx * vx;
+
+    // Momentum (optional but useful):
+    const p0 = m * v0;
+    const px = m * vx;
+
+    // Percent KE remaining
+    const pct = (KE0 > 0) ? (100 * (KEx / KE0)) : 0;
+
+    const lines = [];
+    lines.push(`Preset: ${p.name}`);
+    lines.push(``);
+    lines.push(`Inputs`);
+    lines.push(`  ρ   = ${fmt(rho, mode)}  kg/m^3`);
+    lines.push(`  Cd  = ${fmt(cd, mode)}  (dimensionless)`);
+    lines.push(`  x   = ${fmt(x, mode)}  m`);
+    lines.push(``);
+    lines.push(`Projectile`);
+    lines.push(`  d   = ${fmt(d, mode)}  m`);
+    lines.push(`  A   = π(d/2)^2 = ${fmt(A, mode)}  m^2`);
+    lines.push(`  m   = ${fmt(m, mode)}  kg`);
+    lines.push(`  v0  = ${fmt(v0, mode)}  m/s`);
+    lines.push(``);
+    lines.push(`Quadratic Drag (snapshot at muzzle)`);
+    lines.push(`  Fd0 = 1/2 ρ Cd A v0^2 = ${fmt(Fd0, mode)}  N`);
+    lines.push(``);
+    lines.push(`Range Model (simple analytic)`);
+    lines.push(`  K   = 1/2 ρ Cd (A/m) = ${fmt(K, mode)}  1/m`);
+    lines.push(`  v(x)= v0 e^(-Kx)     = ${fmt(vx, mode)}  m/s`);
+    lines.push(``);
+    lines.push(`Energy + Momentum`);
+    lines.push(`  KE0 = 1/2 m v0^2     = ${fmt(KE0, mode)}  J`);
+    lines.push(`  KE(x)=1/2 m v(x)^2   = ${fmt(KEx, mode)}  J   (${fmt(pct, "plain")}%)`);
+    lines.push(`  p0  = m v0           = ${fmt(p0, mode)}  kg·m/s`);
+    lines.push(`  p(x)= m v(x)         = ${fmt(px, mode)}  kg·m/s`);
+
+    elOut.textContent = lines.join("\n");
+  }
+
+  function resetEarth(){
+    elRho.value = 1.225;
+    elCd.value = 0.30;
+    elRange.value = 100;
+    elFmt.value = "sn";
+    elOverride.value = "no";
+    elOverrideBox.style.display = "none";
+    elPreset.value = PRESETS[0].key;
+    syncOverrideFieldsFromPreset();
+    compute();
+  }
+
+  elPreset.addEventListener("change", () => {
+    syncOverrideFieldsFromPreset();
+    compute();
+  });
+
+  elOverride.addEventListener("change", () => {
+    elOverrideBox.style.display = (elOverride.value === "yes") ? "block" : "none";
+    if (elOverride.value === "yes") syncOverrideFieldsFromPreset();
+    compute();
+  });
+
+  document.getElementById("compute").addEventListener("click", compute);
+  document.getElementById("reset").addEventListener("click", resetEarth);
+
+  populatePresets();
+  compute();
+</script>
+</body>
+</html>
