@@ -46,7 +46,6 @@ body{
 }
 
 .titlebar .btns{display:flex;gap:6px;}
-
 .titlebar .btn{
   width:14px;height:14px;
   background:var(--panel);
@@ -60,7 +59,7 @@ body{
   padding:14px;
   display:grid;
   gap:12px;
-  /* Give Viz a bit more room */
+  /* give Viz a bit more room */
   grid-template-columns: 1.05fr 0.85fr 1.15fr;
 }
 
@@ -84,7 +83,7 @@ body{
   grid-template-columns:170px minmax(0,1fr);
   gap:10px;
   align-items:center;
-  margin:10px 0; /* more air */
+  margin:10px 0;
 }
 
 label{
@@ -102,63 +101,29 @@ input,select{
   border:2px solid #000;
   box-shadow:inset 2px 2px 0 #666,inset -2px -2px 0 #eee;
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
+  box-sizing:border-box;
 }
 
-/* ---------- INPUT LAYOUT: tuck RIGHT edge inward (NOT the left) ---------- */
-/* This keeps controls inside the right margin and avoids the “over the border” look. */
-.inputs .row > input,
-.inputs .row > select{
-  width: calc(100% - 18px);   /* increase to tuck more (e.g., 22) */
-  justify-self: end;          /* anchor to RIGHT edge of the cell */
-}
-
-.inputs .row{ overflow:hidden; }
-
-.inputs label{ font-size:12px; }
-
-.inputs input,
-.inputs select{
-  padding:6px 6px;
-  font-size:12px;
-}
-
-.inputs .actions button{
-  padding:7px 10px;
-  font-size:12px;
-}
-
-.inputs .hint{
-  font-size:11px;
-  margin-top:8px;
-}
-
-/* KPI blocks: small label, big control */
+/* KPI blocks */
 .kpi{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:10px;
 }
-.inputs .kpi .row{
-  grid-template-columns: 78px minmax(0,1fr);
-}
 
-/* Make dropdowns readable */
-.inputs select{ min-width: 160px; }
+/* Inputs sizing (smaller / tighter) */
+.inputs label{ font-size:12px; }
+.inputs input, .inputs select{ padding:6px 6px; font-size:12px; }
+.inputs .actions button{ padding:7px 10px; font-size:12px; }
+.inputs .hint{ font-size:11px; margin-top:8px; }
+.inputs .kpi .row{ grid-template-columns: 78px minmax(0,1fr); }
 
-/* Make number boxes not cramped */
-.inputs input[type="number"]{ min-width: 120px; }
-
-@media (max-width: 420px){
-  .inputs .row{ grid-template-columns: 160px minmax(0,1fr); }
-  .inputs .kpi .row{ grid-template-columns: 70px minmax(0,1fr); }
-  .inputs select, .inputs input[type="number"]{ min-width: 0; }
-}
-
-/* Override box: clean */
+/* Override box */
 .overrideBox .kpi .row{
   grid-template-columns: 92px minmax(140px,1fr);
 }
 
+/* Buttons */
 .actions{
   display:flex;
   gap:10px;
@@ -185,6 +150,7 @@ button:active{
   border-bottom:2px solid var(--hilite);
 }
 
+/* Output */
 .out{
   font-size:13px;
   background:#fff;
@@ -258,6 +224,31 @@ svg text{ font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",
 .shotStop{ stroke:#000; stroke-width:2; stroke-dasharray:4 4; }
 .shotMarker{ stroke:#000; stroke-width:2; }
 .shotDot{ stroke:#000; fill:#fff; }
+
+/* =========================================================
+   FINAL INPUT TUCK + NO OVERFLOW (prevents Canva iframe blowout)
+   (THIS is what keeps the right edge inside the border)
+========================================================= */
+.inputs .row > * { min-width: 0; }
+
+.inputs input,
+.inputs select{
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.inputs .row > input,
+.inputs .row > select{
+  width: calc(100% - 18px);  /* tuck amount: 14–26 */
+  justify-self: end;         /* anchor to RIGHT side of cell */
+}
+
+/* Mobile safety */
+@media (max-width: 420px){
+  .inputs .row{ grid-template-columns: 160px minmax(0,1fr); }
+  .inputs .kpi .row{ grid-template-columns: 70px minmax(0,1fr); }
+}
 </style>
 </head>
 
@@ -366,7 +357,7 @@ svg text{ font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",
       <h3>Viz (Shot History)</h3>
 
       <div class="vizWrap">
-        <!-- Bigger viz -->
+        <!-- bigger viz -->
         <svg id="viz" viewBox="0 0 840 420" width="100%" height="420" role="img" aria-label="Shot history visualization"></svg>
       </div>
 
@@ -563,12 +554,12 @@ function buildLegend(){
 }
 
 function drawViz(currentMeta=null){
-  const W = 840, H = 420;            // bigger
+  const W = 840, H = 420;
   const padL = 64, padR = 18, padT = 16, padB = 44;
 
   const list = [...SHOTS];
   if (currentMeta && elRecord.value === "no"){
-    list.unshift({ ...currentMeta, id:"(preview)", presetKey: currentMeta.presetKey, presetName: currentMeta.presetName });
+    list.unshift({ ...currentMeta, id:"(preview)" });
   }
 
   let xMax = 1;
@@ -639,14 +630,12 @@ function drawViz(currentMeta=null){
     elViz.appendChild(svgEl("circle", { cx:xPx, cy:yMid, r:6, class:"shotDot" }));
 
     const leftText = svgEl("text", { x: padL - 10, y: yMid + 5, "text-anchor":"end", "font-size":"14", fill:"#000" });
-    const idTxt = String(s.id);
-    leftText.textContent = `${idTxt} ${s.presetKey}`;
+    leftText.textContent = `${String(s.id)} ${s.presetKey}`;
     elViz.appendChild(leftText);
 
     const pctTxt = Number.isFinite(s.pct) ? `${fmt(s.pct,"plain")}%` : "—";
-    const rightText = svgEl("text", { x: W - padR, y: yMid + 20, "text-anchor":"end", "font-size":"14", fill:"#000" });
     const stopTxt = Number.isFinite(s.xStop) ? `${Math.round(s.xStop)}m` : "∞";
-    /* Add caliber next to KE */
+    const rightText = svgEl("text", { x: W - padR, y: yMid + 20, "text-anchor":"end", "font-size":"14", fill:"#000" });
     rightText.textContent = `${s.presetKey}  |  KE@x: ${pctTxt}  |  xStop: ${stopTxt}`;
     elViz.appendChild(rightText);
   }
@@ -714,10 +703,7 @@ function populatePresets(){
   syncOverrideFieldsFromPreset();
 }
 
-elPreset.addEventListener("change", () => {
-  syncOverrideFieldsFromPreset();
-  doCompute();
-});
+elPreset.addEventListener("change", () => { syncOverrideFieldsFromPreset(); doCompute(); });
 
 elOverride.addEventListener("change", () => {
   elOverrideBox.style.display = (elOverride.value === "yes") ? "block" : "none";
