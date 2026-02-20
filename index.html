@@ -103,13 +103,15 @@ input,select{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
 }
 
-/* --- Inputs: tuck the right edge in from the panel border --- */
+/* --- Inputs: cap field width so the RIGHT edge tucks in --- */
 
-/* Add a little "gutter" to the 2nd grid column (the input/select column) */
-.inputs .row > :nth-child(2){
-  padding-right: 14px;     /* <- adjust 10–18 until it matches your diagram */
-  box-sizing: border-box;
+/* Keep the grid as-is, but make the input/select not use the full cell width */
+.inputs .row > input,
+.inputs .row > select{
+  width: calc(100% - 16px);   /* <- tuck amount; try 16–22 */
+  justify-self: start;        /* anchor to the LEFT edge of the cell */
 }
+
 
 /* (Optional) if any row uses nested wrappers later, this keeps it safe */
 .inputs .row{
@@ -751,6 +753,7 @@ doCompute();
 </script>
 </body>
 </html>
+
 
 
 
