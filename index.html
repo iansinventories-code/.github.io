@@ -1,403 +1,744 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ballistic Correlator (Quadratic Drag)</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ballistic Correlator (Quadratic Drag)</title>
 
-  <style>
-    :root {
-      --bg: #c0c0c0;
-      --panel: #d4d4d4;
-      --ink: #111;
-      --shadow: #7a7a7a;
-      --hilite: #f3f3f3;
-    }
+<style>
+:root{
+  --bg:#c0c0c0;
+  --panel:#d4d4d4;
+  --ink:#111;
+  --shadow:#7a7a7a;
+  --hilite:#f3f3f3;
+}
 
-    body {
-      margin: 0;
-      font-family: "MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",ui-sans-serif,system-ui,sans-serif;
-      background: #1b1b1b;
-      color: var(--ink);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 16px;
-    }
+body{
+  margin:0;
+  font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",ui-sans-serif,system-ui,sans-serif;
+  background:#1b1b1b;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  padding:16px;
+}
 
-    .win {
-      width: min(1220px,100%);
-      background: var(--bg);
-      border: 2px solid #000;
-      box-shadow: 0 0 0 2px #4a4a4a,10px 10px 0 #000;
-    }
+.win{
+  width:min(1220px,100%);
+  background:var(--bg);
+  border:2px solid #000;
+  box-shadow:0 0 0 2px #4a4a4a,10px 10px 0 #000;
+}
 
-    .titlebar {
-      background: #000080;
-      color: #fff;
-      padding: 8px 10px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-family: "MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
-      letter-spacing: 0.2px;
-    }
+.titlebar{
+  background:#000080;
+  color:#fff;
+  padding:8px 10px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
+  letter-spacing:0.2px;
+}
 
-    .titlebar .btns { display: flex; gap: 6px; }
+.titlebar .btns{display:flex;gap:6px;}
 
-    .titlebar .btn {
-      width: 14px;
-      height: 14px;
-      background: var(--panel);
-      border-top: 2px solid var(--hilite);
-      border-left: 2px solid var(--hilite);
-      border-right: 2px solid var(--shadow);
-      border-bottom: 2px solid var(--shadow);
-    }
+.titlebar .btn{
+  width:14px;height:14px;
+  background:var(--panel);
+  border-top:2px solid var(--hilite);
+  border-left:2px solid var(--hilite);
+  border-right:2px solid var(--shadow);
+  border-bottom:2px solid var(--shadow);
+}
 
-    .content {
-      padding: 14px;
-      display: grid;
-      gap: 12px;
-      grid-template-columns: 1.05fr 0.85fr 0.95fr;
-    }
+.content{
+  padding:14px;
+  display:grid;
+  gap:12px;
+  /* Give Viz a bit more room */
+  grid-template-columns: 1.05fr 0.85fr 1.15fr;
+}
 
-    @media (max-width: 1080px) {
-      .content { grid-template-columns: 1fr; }
-    }
+@media (max-width: 1080px){
+  .content{ grid-template-columns: 1fr; }
+}
 
-    .group {
-      background: var(--panel);
-      border-top: 2px solid var(--hilite);
-      border-left: 2px solid var(--hilite);
-      border-right: 2px solid var(--shadow);
-      border-bottom: 2px solid var(--shadow);
-      padding: 12px;
-    }
+.group{
+  background:var(--panel);
+  border-top:2px solid var(--hilite);
+  border-left:2px solid var(--hilite);
+  border-right:2px solid var(--shadow);
+  border-bottom:2px solid var(--shadow);
+  padding:12px;
+}
 
-    .group h3 {
-      margin: 0 0 10px 0;
-      font-size: 14px;
-    }
+.group h3{ margin:0 0 10px 0; font-size:14px; }
 
-    .row {
-      display: grid;
-      grid-template-columns: 170px minmax(0,1fr);
-      gap: 10px;
-      align-items: center;
-      margin: 10px 0;
-    }
+.row{
+  display:grid;
+  grid-template-columns:170px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  margin:10px 0; /* more air */
+}
 
-    label {
-      font-size: 13px;
-      white-space: nowrap;
-    }
+label{
+  font-size:13px;
+  white-space:nowrap;
+}
 
-    input, select {
-      width: 100%;
-      min-width: 0;
-      padding: 8px;
-      font-size: 13px;
-      background: #fff;
-      color: #000;
-      border: 2px solid #000;
-      box-shadow: inset 2px 2px 0 #666, inset -2px -2px 0 #eee;
-      font-family: "MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
-    }
+input,select{
+  width:100%;
+  min-width:0;
+  padding:8px;
+  font-size:13px;
+  background:#fff;
+  color:#000;
+  border:2px solid #000;
+  box-shadow:inset 2px 2px 0 #666,inset -2px -2px 0 #eee;
+  font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
+}
 
-    .inputs .row > input,
-    .inputs .row > select {
-      width: calc(100% - 16px);
-      justify-self: start;
-    }
+/* ---------- INPUT LAYOUT: tuck RIGHT edge inward (NOT the left) ---------- */
+/* This keeps controls inside the right margin and avoids the “over the border” look. */
+.inputs .row > input,
+.inputs .row > select{
+  width: calc(100% - 18px);   /* increase to tuck more (e.g., 22) */
+  justify-self: end;          /* anchor to RIGHT edge of the cell */
+}
 
-    .inputs .row { overflow: hidden; }
+.inputs .row{ overflow:hidden; }
 
-    .inputs label { font-size: 12px; }
-    .inputs input,
-    .inputs select { padding: 6px; font-size: 12px; }
+.inputs label{ font-size:12px; }
 
-    .inputs .actions button { padding: 7px 10px; font-size: 12px; }
+.inputs input,
+.inputs select{
+  padding:6px 6px;
+  font-size:12px;
+}
 
-    .inputs .hint { font-size: 11px; margin-top: 8px; }
+.inputs .actions button{
+  padding:7px 10px;
+  font-size:12px;
+}
 
-    .inputs .kpi .row {
-      grid-template-columns: 78px minmax(0,1fr);
-    }
+.inputs .hint{
+  font-size:11px;
+  margin-top:8px;
+}
 
-    .inputs select { min-width: 140px; }
-    .inputs input[type="number"] { min-width: 110px; }
-    .inputs input,
-    .inputs select { max-width: 100%; }
+/* KPI blocks: small label, big control */
+.kpi{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:10px;
+}
+.inputs .kpi .row{
+  grid-template-columns: 78px minmax(0,1fr);
+}
 
-    @media (max-width: 420px) {
-      .inputs .row { grid-template-columns: 160px minmax(0,1fr); }
-      .inputs .kpi .row { grid-template-columns: 70px minmax(0,1fr); }
-      .inputs select,
-      .inputs input[type="number"] { min-width: 0; }
-    }
+/* Make dropdowns readable */
+.inputs select{ min-width: 160px; }
 
-    .overrideBox .kpi .row {
-      grid-template-columns: 92px minmax(140px,1fr);
-    }
+/* Make number boxes not cramped */
+.inputs input[type="number"]{ min-width: 120px; }
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-    }
+@media (max-width: 420px){
+  .inputs .row{ grid-template-columns: 160px minmax(0,1fr); }
+  .inputs .kpi .row{ grid-template-columns: 70px minmax(0,1fr); }
+  .inputs select, .inputs input[type="number"]{ min-width: 0; }
+}
 
-    button {
-      padding: 9px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      background: var(--panel);
-      border-top: 2px solid var(--hilite);
-      border-left: 2px solid var(--hilite);
-      border-right: 2px solid var(--shadow);
-      border-bottom: 2px solid var(--shadow);
-      font-family: "MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
-    }
+/* Override box: clean */
+.overrideBox .kpi .row{
+  grid-template-columns: 92px minmax(140px,1fr);
+}
 
-    button:active {
-      border-top: 2px solid var(--shadow);
-      border-left: 2px solid var(--shadow);
-      border-right: 2px solid var(--hilite);
-      border-bottom: 2px solid var(--hilite);
-    }
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
 
-    .out {
-      font-size: 13px;
-      background: #fff;
-      border: 2px solid #000;
-      box-shadow: inset 2px 2px 0 #666, inset -2px -2px 0 #eee;
-      padding: 10px;
-      white-space: pre-wrap;
-      min-height: 300px;
-      font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace;
-    }
+button{
+  padding:9px 12px;
+  font-size:13px;
+  cursor:pointer;
+  background:var(--panel);
+  border-top:2px solid var(--hilite);
+  border-left:2px solid var(--hilite);
+  border-right:2px solid var(--shadow);
+  border-bottom:2px solid var(--shadow);
+  font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
+}
 
-    .tiny { font-size: 12px; opacity: 0.9; }
+button:active{
+  border-top:2px solid var(--shadow);
+  border-left:2px solid var(--shadow);
+  border-right:2px solid var(--hilite);
+  border-bottom:2px solid var(--hilite);
+}
 
-    .hint {
-      margin-top: 12px;
-      font-size: 12px;
-      color: #222;
-      opacity: 0.9;
-      line-height: 1.35;
-    }
+.out{
+  font-size:13px;
+  background:#fff;
+  border:2px solid #000;
+  box-shadow:inset 2px 2px 0 #666,inset -2px -2px 0 #eee;
+  padding:10px;
+  white-space:pre-wrap;
+  min-height:300px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace;
+}
 
-    .vizWrap {
-      background: #fff;
-      border: 2px solid #000;
-      box-shadow: inset 2px 2px 0 #666, inset -2px -2px 0 #eee;
-      padding: 8px;
-    }
+.tiny{ font-size:12px; opacity:0.9; }
 
-    .foot {
-      padding: 0 14px 14px;
-      font-size: 12px;
-      color: #ddd;
-    }
+.hint{
+  margin-top:12px;
+  font-size:12px;
+  color:#222;
+  opacity:0.9;
+  line-height:1.35;
+}
 
-    .note {
-      background: #101010;
-      border: 1px solid #333;
-      padding: 10px;
-      border-radius: 8px;
-      color: #ddd;
-      line-height: 1.35;
-    }
+.vizWrap{
+  background:#fff;
+  border:2px solid #000;
+  box-shadow:inset 2px 2px 0 #666,inset -2px -2px 0 #eee;
+  padding:8px;
+}
 
-    .badgeRow {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 8px;
-    }
+.foot{
+  padding:0 14px 14px;
+  font-size:12px;
+  color:#ddd;
+}
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      background: #eee;
-      border: 1px solid #000;
-      padding: 4px 6px;
-      font-family: "MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
-    }
+.note{
+  background:#101010;
+  border:1px solid #333;
+  padding:10px;
+  border-radius:8px;
+  color:#ddd;
+  line-height:1.35;
+}
 
-    .dot {
-      width: 10px;
-      height: 10px;
-      border: 1px solid #000;
-      display: inline-block;
-    }
+.badgeRow{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
 
-    svg text {
-      font-family: "MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
-    }
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  background:#eee;
+  border:1px solid #000;
+  padding:4px 6px;
+  font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
+}
 
-    .axis { stroke: #000; stroke-width: 2; }
-    .grid { stroke: #999; stroke-width: 1; stroke-dasharray: 3 4; }
-    .shotLine { stroke: #000; stroke-width: 3; }
-    .shotStop { stroke: #000; stroke-width: 2; stroke-dasharray: 4 4; }
-    .shotMarker { stroke: #000; stroke-width: 2; }
-    .shotDot { stroke: #000; fill: #fff; }
-  </style>
+.dot{
+  width:10px;height:10px;border:1px solid #000;display:inline-block;
+}
+
+/* SVG styles */
+svg text{ font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif; }
+.axis{ stroke:#000; stroke-width:2; }
+.grid{ stroke:#999; stroke-width:1; stroke-dasharray:3 4; }
+.shotLine{ stroke:#000; stroke-width:3; }
+.shotStop{ stroke:#000; stroke-width:2; stroke-dasharray:4 4; }
+.shotMarker{ stroke:#000; stroke-width:2; }
+.shotDot{ stroke:#000; fill:#fff; }
+</style>
 </head>
 
 <body>
-  <div class="win">
+<div class="win">
+  <div class="titlebar">
+    <div>Ballistic Correlator — Quadratic Drag (Rifle/Pistol Presets)</div>
+    <div class="btns" aria-hidden="true"><div class="btn"></div><div class="btn"></div><div class="btn"></div></div>
+  </div>
 
-    <!-- TITLE BAR -->
-    <div class="titlebar">
-      <div>Ballistic Correlator — Quadratic Drag (Rifle/Pistol Presets)</div>
-      <div class="btns" aria-hidden="true">
-        <div class="btn"></div>
-        <div class="btn"></div>
-        <div class="btn"></div>
+  <div class="content">
+
+    <!-- INPUTS -->
+    <div class="group inputs">
+      <h3>Inputs</h3>
+
+      <div class="row">
+        <label for="preset">Caliber preset</label>
+        <select id="preset"></select>
       </div>
-    </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="content">
-
-      <!-- INPUTS -->
-      <div class="group inputs">
-        <h3>Inputs</h3>
-
+      <div class="kpi">
         <div class="row">
-          <label for="preset">Caliber preset</label>
-          <select id="preset"></select>
+          <label for="rho">Fluid ρ</label>
+          <input id="rho" type="number" step="any" value="1.225" />
         </div>
-
-        <div class="kpi">
-          <div class="row">
-            <label for="rho">Fluid ρ</label>
-            <input id="rho" type="number" step="any" value="1.225" />
-          </div>
-          <div class="row">
-            <label for="cd">Cd</label>
-            <input id="cd" type="number" step="any" value="0.30" />
-          </div>
-        </div>
-
-        <div class="kpi">
-          <div class="row">
-            <label for="range">Range x</label>
-            <input id="range" type="number" step="any" value="100" />
-          </div>
-          <div class="row">
-            <label for="fmt">Format</label>
-            <select id="fmt">
-              <option value="sn" selected>Sci</option>
-              <option value="plain">Plain</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="kpi">
-          <div class="row">
-            <label for="vstop">Stop v</label>
-            <input id="vstop" type="number" step="any" value="50" />
-          </div>
-          <div class="row">
-            <label for="record">Record</label>
-            <select id="record">
-              <option value="yes" selected>Yes</option>
-              <option value="no">No (preview)</option>
-            </select>
-          </div>
-        </div>
-
         <div class="row">
-          <label for="override">Override preset?</label>
-          <select id="override">
-            <option value="no" selected>No</option>
-            <option value="yes">Yes (edit m,d,v₀)</option>
+          <label for="cd">Cd</label>
+          <input id="cd" type="number" step="any" value="0.30" />
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="row">
+          <label for="range">Range x</label>
+          <input id="range" type="number" step="any" value="100" />
+        </div>
+        <div class="row">
+          <label for="fmt">Format</label>
+          <select id="fmt">
+            <option value="sn" selected>Sci</option>
+            <option value="plain">Plain</option>
           </select>
         </div>
+      </div>
 
-        <div id="overrideBox" class="overrideBox" style="display:none;">
-          <div class="kpi">
-            <div class="row">
-              <label for="m">Mass m</label>
-              <input id="m" type="number" step="any" />
-            </div>
-            <div class="row">
-              <label for="d">Dia d</label>
-              <input id="d" type="number" step="any" />
-            </div>
-          </div>
+      <div class="kpi">
+        <div class="row">
+          <label for="vstop">Stop v</label>
+          <input id="vstop" type="number" step="any" value="50" />
+        </div>
+        <div class="row">
+          <label for="record">Record</label>
+          <select id="record">
+            <option value="yes" selected>Yes</option>
+            <option value="no">No (preview)</option>
+          </select>
+        </div>
+      </div>
 
+      <div class="row">
+        <label for="override">Override preset?</label>
+        <select id="override">
+          <option value="no" selected>No</option>
+          <option value="yes">Yes (edit m,d,v₀)</option>
+        </select>
+      </div>
+
+      <div id="overrideBox" class="overrideBox" style="display:none;">
+        <div class="kpi">
           <div class="row">
-            <label for="v0">Muzzle v₀</label>
-            <input id="v0" type="number" step="any" />
+            <label for="m">Mass m</label>
+            <input id="m" type="number" step="any" />
+          </div>
+          <div class="row">
+            <label for="d">Dia d</label>
+            <input id="d" type="number" step="any" />
           </div>
         </div>
-
-        <div class="actions">
-          <button id="compute">Compute</button>
-          <button id="reset">Reset</button>
-          <button id="wipe">Wipe shots</button>
-        </div>
-
-        <div class="hint">
-          Straight-line toy model (no gravity drop). Vacuum = set ρ = 0.
-          Stop distance is computed from v(x)=v₀e^{-Kx} using a cutoff speed.
+        <div class="row">
+          <label for="v0">Muzzle v₀</label>
+          <input id="v0" type="number" step="any" />
         </div>
       </div>
 
-      <!-- OUTPUTS -->
-      <div class="group">
-        <h3>Outputs</h3>
-        <div id="out" class="out"></div>
+      <div class="actions">
+        <button id="compute">Compute</button>
+        <button id="reset">Reset</button>
+        <button id="wipe">Wipe shots</button>
       </div>
 
-      <!-- VIZ -->
-      <div class="group">
-        <h3>Viz (Shot History)</h3>
-
-        <div class="vizWrap">
-          <svg id="viz" viewBox="0 0 840 360" width="100%" height="360"></svg>
-        </div>
-
-        <div class="badgeRow" id="legend"></div>
-
-        <div class="hint">
-          Each shot shows: bar = predicted travel until v hits “Stop v”,
-          dot = your selected range x.
-        </div>
+      <div class="hint">
+        Straight-line toy model (no gravity drop). Vacuum = set ρ = 0.
+        Stop distance is computed from v(x)=v₀e^{-Kx} using a cutoff speed.
       </div>
     </div>
 
-    <!-- FOOT -->
-    <div class="foot">
-      <div class="note">
-        <b>Embed into Canva:</b> use your GitHub Pages URL.
-        Update this tool by editing <span class="tiny">index.html</span>
-        and committing.
+    <!-- OUTPUTS -->
+    <div class="group">
+      <h3>Outputs</h3>
+      <div id="out" class="out"></div>
+    </div>
+
+    <!-- VIZ -->
+    <div class="group">
+      <h3>Viz (Shot History)</h3>
+
+      <div class="vizWrap">
+        <!-- Bigger viz -->
+        <svg id="viz" viewBox="0 0 840 420" width="100%" height="420" role="img" aria-label="Shot history visualization"></svg>
+      </div>
+
+      <div class="badgeRow" id="legend"></div>
+
+      <div class="hint">
+        Each shot shows: bar = predicted travel until v hits “Stop v”, dot = your selected range x.
       </div>
     </div>
 
   </div>
 
-  <!-- JS -->
-  <script>
-    /* JS unchanged — same logic, only indentation cleaned */
-    const PRESETS = [
-      { key:"556", name:"5.56 NATO (control)", d:5.56e-3, m:4.0e-3, v0:900 },
-      { key:"762", name:"7.62 NATO (9 g @ 700)", d:7.62e-3, m:9.0e-3, v0:700 },
-      { key:"762H", name:"7.62 RND Heavy (21 g @ 750)", d:7.62e-3, m:2.1e-2, v0:750 },
-      { key:"308", name:".308 (7.82mm @ 10 g @ 820)", d:7.82e-3, m:1.0e-2, v0:820 },
-      { key:"9mm", name:"9mm (pistol-ish, 8 g @ 350)", d:9.0e-3, m:8.0e-3, v0:350 }
-    ];
+  <div class="foot">
+    <div class="note">
+      <b>Embed into Canva:</b> use your GitHub Pages URL. Update this tool by editing <span class="tiny">index.html</span> and committing.
+    </div>
+  </div>
+</div>
 
-    /* ...rest of your JS exactly same... */
-  </script>
+<script>
+const PRESETS = [
+  { key:"556",  name:"5.56 NATO (control)",           d:5.56e-3, m:4.0e-3,  v0:900 },
+  { key:"762",  name:"7.62 NATO (9 g @ 700)",         d:7.62e-3, m:9.0e-3,  v0:700 },
+  { key:"762H", name:"7.62 RND Heavy (21 g @ 750)",   d:7.62e-3, m:2.1e-2,  v0:750 },
+  { key:"308",  name:".308 (7.82mm @ 10 g @ 820)",    d:7.82e-3, m:1.0e-2,  v0:820 },
+  { key:"9mm",  name:"9mm (pistol-ish, 8 g @ 350)",   d:9.0e-3,  m:8.0e-3,  v0:350 },
+];
+
+const elPreset = document.getElementById("preset");
+const elRho = document.getElementById("rho");
+const elCd = document.getElementById("cd");
+const elRange = document.getElementById("range");
+const elFmt = document.getElementById("fmt");
+const elVstop = document.getElementById("vstop");
+const elRecord = document.getElementById("record");
+const elOverride = document.getElementById("override");
+const elOverrideBox = document.getElementById("overrideBox");
+const elM = document.getElementById("m");
+const elD = document.getElementById("d");
+const elV0 = document.getElementById("v0");
+const elOut = document.getElementById("out");
+const elViz = document.getElementById("viz");
+const elLegend = document.getElementById("legend");
+
+let SHOTS = [];
+let shotCounter = 0;
+
+function fmt(x, mode){
+  if (!Number.isFinite(x)) return "—";
+  if (mode === "plain"){
+    const ax = Math.abs(x);
+    if (ax === 0) return "0";
+    if (ax >= 1000 || ax < 0.001) return x.toPrecision(6);
+    return x.toFixed(6).replace(/0+$/,'').replace(/\.$/,'');
+  }
+  return x.toExponential(6).replace("e+","e");
+}
+
+function areaFromDiameter(d){
+  return Math.PI * Math.pow(d/2, 2);
+}
+
+function getSelectedPreset(){
+  const key = elPreset.value;
+  return PRESETS.find(p => p.key === key) || PRESETS[0];
+}
+
+function syncOverrideFieldsFromPreset(){
+  const p = getSelectedPreset();
+  elM.value = p.m;
+  elD.value = p.d;
+  elV0.value = p.v0;
+}
+
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+function computeOne(){
+  const rho = Number(elRho.value);
+  const cd  = Number(elCd.value);
+  const x   = Number(elRange.value);
+  const vStop = Number(elVstop.value);
+
+  if (!(rho >= 0) || !(cd > 0) || !(x >= 0) || !(vStop > 0)){
+    return { ok:false, err:"Invalid input(s). Ensure: ρ ≥ 0, Cd > 0, range ≥ 0, stop v > 0." };
+  }
+
+  const p = getSelectedPreset();
+  let m = p.m, d = p.d, v0 = p.v0;
+
+  if (elOverride.value === "yes"){
+    m = Number(elM.value);
+    d = Number(elD.value);
+    v0 = Number(elV0.value);
+    if (!(m > 0) || !(d > 0) || !(v0 >= 0)){
+      return { ok:false, err:"Invalid override values. Need: m > 0, d > 0, v₀ ≥ 0." };
+    }
+  }
+
+  const A = areaFromDiameter(d);
+  const Fd0 = 0.5 * rho * cd * A * v0 * v0;
+  const K = 0.5 * rho * cd * (A / m);
+
+  const vx = v0 * Math.exp(-K * x);
+  const KE0 = 0.5 * m * v0 * v0;
+  const KEx = 0.5 * m * vx * vx;
+  const p0 = m * v0;
+  const px = m * vx;
+  const pct = (KE0 > 0) ? (100 * (KEx / KE0)) : 0;
+
+  let xStop = Infinity;
+  if (K > 0 && v0 > 0){
+    if (vStop >= v0) xStop = 0;
+    else xStop = (1 / K) * Math.log(v0 / vStop);
+  }
+
+  return {
+    ok:true,
+    meta:{
+      presetKey: p.key,
+      presetName: p.name,
+      rho, cd, x, vStop,
+      m, d, v0, A,
+      Fd0, K,
+      vx, KE0, KEx, pct,
+      p0, px,
+      xStop
+    }
+  };
+}
+
+function renderOutputs(meta){
+  const mode = elFmt.value;
+  const lines = [];
+  lines.push(`Preset: ${meta.presetName}`);
+  lines.push(``);
+  lines.push(`Inputs`);
+  lines.push(`  ρ    = ${fmt(meta.rho, mode)}  kg/m^3`);
+  lines.push(`  Cd   = ${fmt(meta.cd, mode)}  (dimensionless)`);
+  lines.push(`  x    = ${fmt(meta.x, mode)}  m`);
+  lines.push(`  vStop= ${fmt(meta.vStop, mode)}  m/s`);
+  lines.push(``);
+  lines.push(`Projectile`);
+  lines.push(`  d    = ${fmt(meta.d, mode)}  m`);
+  lines.push(`  A    = π(d/2)^2 = ${fmt(meta.A, mode)}  m^2`);
+  lines.push(`  m    = ${fmt(meta.m, mode)}  kg`);
+  lines.push(`  v0   = ${fmt(meta.v0, mode)}  m/s`);
+  lines.push(``);
+  lines.push(`Quadratic Drag (snapshot at muzzle)`);
+  lines.push(`  Fd0  = 1/2 ρ Cd A v0^2 = ${fmt(meta.Fd0, mode)}  N`);
+  lines.push(``);
+  lines.push(`Range Model (simple analytic)`);
+  lines.push(`  K    = 1/2 ρ Cd (A/m) = ${fmt(meta.K, mode)}  1/m`);
+  lines.push(`  v(x) = v0 e^(-Kx)     = ${fmt(meta.vx, mode)}  m/s`);
+  lines.push(``);
+  lines.push(`Energy + Momentum`);
+  lines.push(`  KE0  = 1/2 m v0^2     = ${fmt(meta.KE0, mode)}  J`);
+  lines.push(`  KE(x)= 1/2 m v(x)^2   = ${fmt(meta.KEx, mode)}  J   (${fmt(meta.pct, "plain")}%)`);
+  lines.push(`  p0   = m v0           = ${fmt(meta.p0, mode)}  kg·m/s`);
+  lines.push(`  p(x) = m v(x)         = ${fmt(meta.px, mode)}  kg·m/s`);
+  lines.push(``);
+  lines.push(`Stop distance estimate (v → vStop)`);
+  lines.push(`  xStop ≈ ${Number.isFinite(meta.xStop) ? fmt(meta.xStop, mode) : "∞"}  m`);
+  elOut.textContent = lines.join("\n");
+}
+
+function svgEl(tag, attrs={}){
+  const n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k,v] of Object.entries(attrs)) n.setAttribute(k, String(v));
+  return n;
+}
+
+function buildLegend(){
+  elLegend.innerHTML = "";
+  const shades = ["#000", "#222", "#444", "#666", "#888"];
+  SHOTS.slice(0, 8).forEach((s, i) => {
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.style.background = shades[i % shades.length];
+    const txt = document.createElement("span");
+    txt.textContent = `Shot ${s.id}: ${s.presetKey} (ρ=${fmt(s.rho,"plain")}, Cd=${fmt(s.cd,"plain")})`;
+    badge.appendChild(dot);
+    badge.appendChild(txt);
+    elLegend.appendChild(badge);
+  });
+
+  if (SHOTS.length > 8){
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.textContent = `+ ${SHOTS.length - 8} more…`;
+    elLegend.appendChild(badge);
+  }
+}
+
+function drawViz(currentMeta=null){
+  const W = 840, H = 420;            // bigger
+  const padL = 64, padR = 18, padT = 16, padB = 44;
+
+  const list = [...SHOTS];
+  if (currentMeta && elRecord.value === "no"){
+    list.unshift({ ...currentMeta, id:"(preview)", presetKey: currentMeta.presetKey, presetName: currentMeta.presetName });
+  }
+
+  let xMax = 1;
+  for (const s of list){
+    const candidate = Number.isFinite(s.xStop) ? Math.max(s.xStop, s.x) : s.x;
+    xMax = Math.max(xMax, candidate);
+  }
+  xMax *= 1.08;
+
+  const rows = list.length;
+  const rowGap = 12;
+  const rowH = rows > 0 ? Math.max(22, Math.floor((H - padT - padB - (rows-1)*rowGap) / Math.max(rows, 1))) : 0;
+
+  elViz.innerHTML = "";
+
+  const axisY = H - padB;
+  elViz.appendChild(svgEl("line", { x1: padL, y1: axisY, x2: W - padR, y2: axisY, class:"axis" }));
+  elViz.appendChild(svgEl("line", { x1: padL, y1: padT, x2: padL, y2: axisY, class:"axis" }));
+
+  const ticks = 6;
+  for (let i=0; i<=ticks; i++){
+    const t = i / ticks;
+    const x = padL + t * (W - padL - padR);
+
+    elViz.appendChild(svgEl("line", { x1:x, y1:padT, x2:x, y2:axisY, class:"grid" }));
+
+    const val = t * xMax;
+    const label = svgEl("text", { x:x, y: H - 18, "text-anchor":"middle", "font-size":"14", fill:"#000" });
+    label.textContent = (xMax >= 10000) ? `${Math.round(val/1000)}k` : `${Math.round(val)}`;
+    elViz.appendChild(label);
+  }
+
+  const xLabel = svgEl("text", { x: (padL + (W-padR))/2, y: H - 2, "text-anchor":"middle", "font-size":"14", fill:"#000" });
+  xLabel.textContent = "distance (m)  —  bar: xStop, dot: selected x";
+  elViz.appendChild(xLabel);
+
+  if (rows === 0){
+    const msg = svgEl("text", { x: W/2, y: H/2, "text-anchor":"middle", "font-size":"14", fill:"#000" });
+    msg.textContent = "No shots yet. Hit Compute to record one.";
+    elViz.appendChild(msg);
+    buildLegend();
+    return;
+  }
+
+  const shades = ["#000", "#222", "#444", "#666", "#888"];
+
+  for (let i=0; i<rows; i++){
+    const s = list[i];
+    const yMid = padT + i*(rowH + rowGap) + rowH/2;
+
+    const color = shades[i % shades.length];
+    const toX = (dist) => padL + (dist / xMax) * (W - padL - padR);
+    const x0 = padL;
+
+    const xStopDist = Number.isFinite(s.xStop) ? s.xStop : xMax;
+    const xStopPx = toX(clamp(xStopDist, 0, xMax));
+
+    elViz.appendChild(svgEl("line", { x1:x0, y1:yMid, x2:xStopPx, y2:yMid, class:"shotLine", stroke: color }));
+
+    if (!Number.isFinite(s.xStop)){
+      elViz.appendChild(svgEl("line", { x1:xStopPx-14, y1:yMid, x2:xStopPx, y2:yMid, class:"shotStop", stroke: color }));
+    } else {
+      elViz.appendChild(svgEl("line", { x1:xStopPx, y1:yMid-8, x2:xStopPx, y2:yMid+8, class:"shotMarker", stroke: color }));
+    }
+
+    const xPx = toX(clamp(s.x, 0, xMax));
+    elViz.appendChild(svgEl("line", { x1:xPx, y1:yMid-10, x2:xPx, y2:yMid+10, class:"shotMarker", stroke: "#000" }));
+    elViz.appendChild(svgEl("circle", { cx:xPx, cy:yMid, r:6, class:"shotDot" }));
+
+    const leftText = svgEl("text", { x: padL - 10, y: yMid + 5, "text-anchor":"end", "font-size":"14", fill:"#000" });
+    const idTxt = String(s.id);
+    leftText.textContent = `${idTxt} ${s.presetKey}`;
+    elViz.appendChild(leftText);
+
+    const pctTxt = Number.isFinite(s.pct) ? `${fmt(s.pct,"plain")}%` : "—";
+    const rightText = svgEl("text", { x: W - padR, y: yMid + 20, "text-anchor":"end", "font-size":"14", fill:"#000" });
+    const stopTxt = Number.isFinite(s.xStop) ? `${Math.round(s.xStop)}m` : "∞";
+    /* Add caliber next to KE */
+    rightText.textContent = `${s.presetKey}  |  KE@x: ${pctTxt}  |  xStop: ${stopTxt}`;
+    elViz.appendChild(rightText);
+  }
+
+  buildLegend();
+}
+
+function doCompute(){
+  const res = computeOne();
+  if (!res.ok){
+    elOut.textContent = res.err;
+    drawViz(null);
+    return;
+  }
+
+  const m = res.meta;
+  renderOutputs(m);
+
+  if (elRecord.value === "yes"){
+    shotCounter += 1;
+    SHOTS.unshift({
+      id: shotCounter,
+      presetKey: m.presetKey,
+      presetName: m.presetName,
+      rho: m.rho, cd: m.cd, x: m.x, vStop: m.vStop,
+      m: m.m, d: m.d, v0: m.v0, A: m.A,
+      Fd0: m.Fd0, K: m.K,
+      vx: m.vx, KE0: m.KE0, KEx: m.KEx, pct: m.pct,
+      p0: m.p0, px: m.px,
+      xStop: m.xStop
+    });
+  }
+
+  drawViz(m);
+}
+
+function resetAll(){
+  elRho.value = 1.225;
+  elCd.value = 0.30;
+  elRange.value = 100;
+  elVstop.value = 50;
+  elFmt.value = "sn";
+  elRecord.value = "yes";
+  elOverride.value = "no";
+  elOverrideBox.style.display = "none";
+  elPreset.value = PRESETS[0].key;
+  syncOverrideFieldsFromPreset();
+  doCompute();
+}
+
+function wipeShots(){
+  SHOTS = [];
+  shotCounter = 0;
+  doCompute();
+}
+
+function populatePresets(){
+  for (const p of PRESETS){
+    const opt = document.createElement("option");
+    opt.value = p.key;
+    opt.textContent = p.name;
+    elPreset.appendChild(opt);
+  }
+  elPreset.value = PRESETS[0].key;
+  syncOverrideFieldsFromPreset();
+}
+
+elPreset.addEventListener("change", () => {
+  syncOverrideFieldsFromPreset();
+  doCompute();
+});
+
+elOverride.addEventListener("change", () => {
+  elOverrideBox.style.display = (elOverride.value === "yes") ? "block" : "none";
+  if (elOverride.value === "yes") syncOverrideFieldsFromPreset();
+  doCompute();
+});
+
+["rho","cd","range","fmt","vstop","record","m","d","v0"].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener("change", () => doCompute());
+});
+
+document.getElementById("compute").addEventListener("click", doCompute);
+document.getElementById("reset").addEventListener("click", resetAll);
+document.getElementById("wipe").addEventListener("click", wipeShots);
+
+(function init(){
+  populatePresets();
+  doCompute();
+})();
+</script>
 </body>
 </html>
