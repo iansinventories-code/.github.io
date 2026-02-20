@@ -103,7 +103,7 @@ input,select{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
 }
 
-/* Default KPI grid (used by non-input panels if you add later) */
+/* Default KPI grid (used by non-/* ---- INPUT PANEL: push left numeric boxes right + widen dropdowns ---- */  /* Standard single rows (Caliber preset, Override preset, Muzzle v0, etc.) */ .inputs .row{   grid-template-columns: 200px minmax(0,1fr); /* was 170px */ }  /* The 2-across KPI rows inside Inputs */ .inputs .kpi .row{   grid-template-columns: 112px minmax(170px,1fr); /* was 92px / 140px min */ }  /* Give selects a sane minimum width so Sci/Plain + Yes/No show fully */ .inputs select{   min-width: 190px; }  /* Optional: small preview safety on tiny screens */ @media (max-width: 420px){   .inputs .row{ grid-template-columns: 170px minmax(0,1fr); }   .inputs .kpi .row{ grid-template-columns: 92px minmax(0,1fr); }   .inputs select{ min-width: 0; } }s if you add later) */
 .kpi{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
@@ -114,33 +114,30 @@ input,select{
   grid-template-columns:140px minmax(0,1fr);
 }
 
-/* =========================
-   INPUT PANEL FIXES
-   Prevent label collisions
-========================= */
-.inputs .kpi .row{
-  grid-template-columns: 92px minmax(140px,1fr); /* tight label col + usable input width */
-  gap:12px;
-  margin:12px 0;
-}
+/* ---- INPUT PANEL: push left numeric boxes right + widen dropdowns ---- */
+
+/* Standard single rows (Caliber preset, Override preset, Muzzle v0, etc.) */
 .inputs .row{
-  margin:12px 0;
+  grid-template-columns: 200px minmax(0,1fr); /* was 170px */
 }
-.inputs label{
-  letter-spacing:0.1px;
+
+/* The 2-across KPI rows inside Inputs */
+.inputs .kpi .row{
+  grid-template-columns: 112px minmax(170px,1fr); /* was 92px / 140px min */
 }
-.inputs input[type="number"],
+
+/* Give selects a sane minimum width so Sci/Plain + Yes/No show fully */
 .inputs select{
-  min-width:140px; /* keeps Cd/Format/Record from collapsing */
+  min-width: 190px;
 }
+
+/* Optional: small preview safety on tiny screens */
 @media (max-width: 420px){
-  .inputs .kpi .row{
-    grid-template-columns: 88px minmax(0,1fr);
-  }
-  .inputs input[type="number"], .inputs select{
-    min-width:0;
-  }
+  .inputs .row{ grid-template-columns: 170px minmax(0,1fr); }
+  .inputs .kpi .row{ grid-template-columns: 92px minmax(0,1fr); }
+  .inputs select{ min-width: 0; }
 }
+
 
 /* Override box: make m/d look clean */
 .overrideBox .kpi .row{
@@ -728,3 +725,4 @@ doCompute();
 </script>
 </body>
 </html>
+
