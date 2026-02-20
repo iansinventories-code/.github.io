@@ -103,11 +103,30 @@ input,select{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
 }
 
-/* ========= INPUT PANEL FIX (final) ========= */
-
-/* 1) Give regular rows a bit more label room */
+/* ===== Inputs panel scale-down (~25%) ===== */
 .inputs .row{
-  grid-template-columns: 190px minmax(0,1fr);
+  grid-template-columns: 130px 1fr;   /* narrower label column */
+  margin:6px 0;
+}
+
+.inputs label{
+  font-size:12px;
+}
+
+.inputs input,
+.inputs select{
+  padding:6px 6px;
+  font-size:12px;
+}
+
+.inputs .actions button{
+  padding:7px 10px;
+  font-size:12px;
+}
+
+.inputs .hint{
+  font-size:11px;
+  margin-top:8px;
 }
 
 /* 2) KPI rows (the 2-wide blocks): SMALL label col, BIG input col */
@@ -725,5 +744,6 @@ doCompute();
 </script>
 </body>
 </html>
+
 
 
