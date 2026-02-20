@@ -103,13 +103,18 @@ input,select{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
 }
 
-/* ===== Inputs alignment polish ===== */
-.inputs .row{
-  grid-template-columns: 160px 1fr;  /* was 130px */
-  gap:14px;                          /* was ~10px */
-  margin:6px 0;
+/* --- Inputs: tuck the right edge in from the panel border --- */
+
+/* Add a little "gutter" to the 2nd grid column (the input/select column) */
+.inputs .row > :nth-child(2){
+  padding-right: 14px;     /* <- adjust 10–18 until it matches your diagram */
+  box-sizing: border-box;
 }
 
+/* (Optional) if any row uses nested wrappers later, this keeps it safe */
+.inputs .row{
+  overflow: hidden;
+}
 
 .inputs label{
   font-size:12px;
@@ -746,6 +751,7 @@ doCompute();
 </script>
 </body>
 </html>
+
 
 
 
