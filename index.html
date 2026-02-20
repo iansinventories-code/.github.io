@@ -103,11 +103,13 @@ input,select{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
 }
 
-/* ===== Inputs panel scale-down (~25%) ===== */
+/* ===== Inputs alignment polish ===== */
 .inputs .row{
-  grid-template-columns: 130px 1fr;   /* narrower label column */
+  grid-template-columns: 160px 1fr;  /* was 130px */
+  gap:14px;                          /* was ~10px */
   margin:6px 0;
 }
+
 
 .inputs label{
   font-size:12px;
@@ -744,6 +746,7 @@ doCompute();
 </script>
 </body>
 </html>
+
 
 
 
