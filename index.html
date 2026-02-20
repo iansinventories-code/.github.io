@@ -103,40 +103,40 @@ input,select{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
 }
 
-/* Default KPI grid (used by non-/* ---- INPUT PANEL: push left numeric boxes right + widen dropdowns ---- */  /* Standard single rows (Caliber preset, Override preset, Muzzle v0, etc.) */ .inputs .row{   grid-template-columns: 200px minmax(0,1fr); /* was 170px */ }  /* The 2-across KPI rows inside Inputs */ .inputs .kpi .row{   grid-template-columns: 112px minmax(170px,1fr); /* was 92px / 140px min */ }  /* Give selects a sane minimum width so Sci/Plain + Yes/No show fully */ .inputs select{   min-width: 190px; }  /* Optional: small preview safety on tiny screens */ @media (max-width: 420px){   .inputs .row{ grid-template-columns: 170px minmax(0,1fr); }   .inputs .kpi .row{ grid-template-columns: 92px minmax(0,1fr); }   .inputs select{ min-width: 0; } }s if you add later) */
-.kpi{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-  gap:12px;
-  column-gap:18px;
-}
-.kpi .row{
-  grid-template-columns:140px minmax(0,1fr);
-}
+/* ========= INPUT PANEL FIX (final) ========= */
 
-/* ---- INPUT PANEL: push left numeric boxes right + widen dropdowns ---- */
-
-/* Standard single rows (Caliber preset, Override preset, Muzzle v0, etc.) */
+/* 1) Give regular rows a bit more label room */
 .inputs .row{
-  grid-template-columns: 200px minmax(0,1fr); /* was 170px */
+  grid-template-columns: 190px minmax(0,1fr);
 }
 
-/* The 2-across KPI rows inside Inputs */
+/* 2) KPI rows (the 2-wide blocks): SMALL label col, BIG input col */
 .inputs .kpi .row{
-  grid-template-columns: 112px minmax(170px,1fr); /* was 92px / 140px min */
+  grid-template-columns: 78px minmax(0,1fr);  /* <- key change */
 }
 
-/* Give selects a sane minimum width so Sci/Plain + Yes/No show fully */
+/* 3) Make dropdowns readable (Sci/Plain, Yes/No) */
 .inputs select{
-  min-width: 190px;
+  min-width: 140px;
 }
 
-/* Optional: small preview safety on tiny screens */
-@media (max-width: 420px){
-  .inputs .row{ grid-template-columns: 170px minmax(0,1fr); }
-  .inputs .kpi .row{ grid-template-columns: 92px minmax(0,1fr); }
-  .inputs select{ min-width: 0; }
+/* 4) Make number boxes a touch wider so they don't look cramped */
+.inputs input[type="number"]{
+  min-width: 110px;
 }
+
+/* 5) Ensure nothing can overflow its grid cell */
+.inputs input, .inputs select{
+  max-width: 100%;
+}
+
+/* Mobile safety */
+@media (max-width: 420px){
+  .inputs .row{ grid-template-columns: 160px minmax(0,1fr); }
+  .inputs .kpi .row{ grid-template-columns: 70px minmax(0,1fr); }
+  .inputs select, .inputs input[type="number"]{ min-width: 0; }
+}
+
 
 
 /* Override box: make m/d look clean */
@@ -725,4 +725,5 @@ doCompute();
 </script>
 </body>
 </html>
+
 
