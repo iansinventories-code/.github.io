@@ -44,9 +44,7 @@ body{
   font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif;
   letter-spacing:0.2px;
 }
-
 .titlebar .btns{display:flex;gap:6px;}
-
 .titlebar .btn{
   width:14px;height:14px;
   background:var(--panel);
@@ -56,11 +54,12 @@ body{
   border-bottom:2px solid var(--shadow);
 }
 
+/* IMPORTANT: minmax(0, …) prevents min-content blowouts from squeezing Viz */
 .content{
   padding:14px;
   display:grid;
   gap:12px;
-  grid-template-columns: 1.05fr 0.85fr 1.15fr; /* Viz gets a bit more room */
+  grid-template-columns: minmax(0,1.05fr) minmax(0,0.85fr) minmax(0,1.15fr);
 }
 
 @media (max-width: 1080px){
@@ -74,6 +73,7 @@ body{
   border-right:2px solid var(--shadow);
   border-bottom:2px solid var(--shadow);
   padding:12px;
+  min-width:0; /* allow shrink inside grid */
 }
 
 .group h3{ margin:0 0 10px 0; font-size:14px; }
@@ -84,6 +84,7 @@ body{
   gap:10px;
   align-items:center;
   margin:10px 0;
+  min-width:0;
 }
 
 label{
@@ -93,7 +94,8 @@ label{
 
 input,select{
   width:100%;
-  min-width:0;
+  min-width:0;         /* critical for grid shrink */
+  max-width:100%;
   padding:8px;
   font-size:13px;
   background:#fff;
@@ -106,50 +108,42 @@ input,select{
 /* ---------- INPUT LAYOUT: tuck RIGHT edge inward (NOT the left) ---------- */
 .inputs .row > input,
 .inputs .row > select{
-  width: calc(100% - 18px);   /* tuck amount; try 14–24 */
+  width: calc(100% - 18px);   /* tuck amount */
   justify-self: end;          /* anchor to RIGHT edge of cell */
 }
 .inputs .row{ overflow:hidden; }
 
-/* Inputs: slightly tighter than default */
 .inputs label{ font-size:12px; }
 .inputs input,
 .inputs select{
   padding:6px 6px;
   font-size:12px;
-}
-.inputs .actions button{
-  padding:7px 10px;
-  font-size:12px;
-}
-.inputs .hint{
-  font-size:11px;
-  margin-top:8px;
+  min-width:0;  /* keep */
+  max-width:100%;
 }
 
-/* KPI blocks: 2 columns, each row is label+control */
+/* KPI blocks: 2 columns */
 .kpi{
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
   gap:10px;
+  min-width:0;
 }
 .inputs .kpi .row{
   grid-template-columns: 78px minmax(0,1fr);
 }
 
-/* dropdown readability */
-.inputs select{ min-width: 160px; }
-.inputs input[type="number"]{ min-width: 120px; }
+/* DO NOT force min-width on selects; it causes right panel squeeze */
+.inputs select{ min-width:0; }
+.inputs input[type="number"]{ min-width:0; }
 
 @media (max-width: 420px){
   .inputs .row{ grid-template-columns: 160px minmax(0,1fr); }
   .inputs .kpi .row{ grid-template-columns: 70px minmax(0,1fr); }
-  .inputs select, .inputs input[type="number"]{ min-width: 0; }
 }
 
-/* Override box: clean */
 .overrideBox .kpi .row{
-  grid-template-columns: 92px minmax(140px,1fr);
+  grid-template-columns: 92px minmax(0,1fr);
 }
 
 /* Buttons */
@@ -188,6 +182,7 @@ button:active{
   padding:10px;
   white-space:pre-wrap;
   min-height:300px;
+  min-width:0;
   font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Courier New",monospace;
 }
 
@@ -206,6 +201,7 @@ button:active{
   border:2px solid #000;
   box-shadow:inset 2px 2px 0 #666,inset -2px -2px 0 #eee;
   padding:8px;
+  min-width:0;
 }
 
 .foot{
@@ -246,17 +242,15 @@ button:active{
 }
 
 /* SVG styles */
+/* KEY FIX: do NOT set stroke color in CSS (JS controls colors) */
 svg text{ font-family:"MS Sans Serif","Microsoft Sans Serif","Tahoma","Verdana",sans-serif; }
-
-/* thicker / clearer */
 .axis{ stroke:#000; stroke-width:2; }
 .grid{ stroke:#999; stroke-width:1; stroke-dasharray:3 4; }
 
-/* defaults (overridden per-shot by JS stroke colors) */
-.shotLine{ stroke:#000; stroke-width:4; }
-.shotStop{ stroke:#000; stroke-width:3; stroke-dasharray:4 4; }
-.shotMarker{ stroke:#000; stroke-width:2; }
-.shotDot{ stroke:#000; fill:#fff; }
+.shotLine{ stroke-width:4; }
+.shotStop{ stroke-width:3; stroke-dasharray:4 4; }
+.shotMarker{ stroke-width:2; }
+.shotDot{ fill:#fff; }
 </style>
 </head>
 
@@ -413,7 +407,7 @@ let SHOTS = [];
 let shotCounter = 0;
 
 /* CMYK flair */
-const CMYK = ["#00AEEF", "#EC008C", "#FFF200", "#000000"]; // cyan, magenta, yellow, key(black)
+const CMYK = ["#00AEEF", "#EC008C", "#FFF200", "#000000"]; // C M Y K
 
 function presetLabelFor(key){
   const p = PRESETS.find(pp => pp.key === key);
@@ -546,13 +540,12 @@ function svgEl(tag, attrs={}){
 
 function buildLegend(){
   elLegend.innerHTML = "";
-  const shades = CMYK;
   SHOTS.slice(0, 8).forEach((s, i) => {
     const badge = document.createElement("div");
     badge.className = "badge";
     const dot = document.createElement("span");
     dot.className = "dot";
-    dot.style.background = shades[i % shades.length];
+    dot.style.background = CMYK[i % CMYK.length];
     const txt = document.createElement("span");
     txt.textContent = `Shot ${s.id}: ${presetLabelFor(s.presetKey)} (ρ=${fmt(s.rho,"plain")}, Cd=${fmt(s.cd,"plain")})`;
     badge.appendChild(dot);
@@ -574,7 +567,7 @@ function drawViz(currentMeta=null){
 
   const list = [...SHOTS];
   if (currentMeta && elRecord.value === "no"){
-    list.unshift({ ...currentMeta, id:"(preview)", presetKey: currentMeta.presetKey, presetName: currentMeta.presetName });
+    list.unshift({ ...currentMeta, id:"(preview)" });
   }
 
   let xMax = 1;
@@ -619,61 +612,57 @@ function drawViz(currentMeta=null){
     return;
   }
 
-  const shades = CMYK;
-
   for (let i=0; i<rows; i++){
     const s = list[i];
     const yMid = padT + i*(rowH + rowGap) + rowH/2;
 
-    const color = shades[i % shades.length];
+    const color = CMYK[i % CMYK.length];
+
     const toX = (dist) => padL + (dist / xMax) * (W - padL - padR);
     const x0 = padL;
 
     const xStopDist = Number.isFinite(s.xStop) ? s.xStop : xMax;
     const xStopPx = toX(clamp(xStopDist, 0, xMax));
 
-    // bar
+    // colored bar
     elViz.appendChild(svgEl("line", {
       x1:x0, y1:yMid, x2:xStopPx, y2:yMid,
       class:"shotLine",
-      stroke: color
+      style:`stroke:${color};`
     }));
 
-    // xStop marker
+    // xStop marker (colored)
     if (!Number.isFinite(s.xStop)){
       elViz.appendChild(svgEl("line", {
         x1:xStopPx-14, y1:yMid, x2:xStopPx, y2:yMid,
         class:"shotStop",
-        stroke: color
+        style:`stroke:${color};`
       }));
     } else {
       elViz.appendChild(svgEl("line", {
         x1:xStopPx, y1:yMid-9, x2:xStopPx, y2:yMid+9,
         class:"shotMarker",
-        stroke: color
+        style:`stroke:${color};`
       }));
     }
 
-    // selected x marker + dot
+    // selected x marker stays black + dot gets colored stroke
     const xPx = toX(clamp(s.x, 0, xMax));
     elViz.appendChild(svgEl("line", {
       x1:xPx, y1:yMid-11, x2:xPx, y2:yMid+11,
       class:"shotMarker",
-      stroke: "#000"
+      style:`stroke:#000;`
     }));
     elViz.appendChild(svgEl("circle", {
       cx:xPx, cy:yMid, r:7,
       class:"shotDot",
-      stroke: color,
-      fill:"#fff"
+      style:`stroke:${color}; fill:#fff; stroke-width:2;`
     }));
 
-    // left label
     const leftText = svgEl("text", { x: padL - 10, y: yMid + 5, "text-anchor":"end", "font-size":"16", fill:"#000" });
     leftText.textContent = `${String(s.id)} ${s.presetKey}`;
     elViz.appendChild(leftText);
 
-    // right info: caliber name + KE% + xStop
     const pctTxt = Number.isFinite(s.pct) ? `${fmt(s.pct,"plain")}%` : "—";
     const stopTxt = Number.isFinite(s.xStop) ? `${Math.round(s.xStop)}m` : "∞";
     const calName = presetLabelFor(s.presetKey);
